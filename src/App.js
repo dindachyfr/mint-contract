@@ -4,9 +4,9 @@ import MainMint from "./MainMint";
 import Navbar from "./Navbar";
 
 function App() {
-  const [accounts, setAccounts] = useState([]);
+  const [accounts, setAccounts] = useState();
   return (
-    <div className="overlay">
+    <div className="">
       <div className="App">
         <Navbar accounts={accounts} setAccounts={setAccounts} />
         <MainMint accounts={accounts} setAccounts={setAccounts} />

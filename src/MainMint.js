@@ -1,129 +1,166 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ethers, BigNumber } from "ethers";
-import { Box, Button, Flex, Input, Text } from "@chakra-ui/react";
-import roboPunksNFT from "./RoboPunksNFT.json";
+import {
+  Box,
+  Button,
+  Flex,
+  HStack,
+  Input,
+  Text,
+  VStack,
+} from "@chakra-ui/react";
+import DNFT from "./DNFT.json";
+import axios from "axios";
 
-const roboPunksNFTAddress = "0x98dae444118201d9967669028e6Fd2B076024e6A";
+const contractAddress = "0x06340aeb1daDffB3D63156fa74252aE297C91B97";
 
-const MainMint = ({ accounts, setAccounts }) => {
+const MainMint = ({ accounts }) => {
   const [mintAmount, setMintAmount] = useState(1);
-  const isConnected = Boolean(accounts[0]);
+  const isConnected = Boolean(accounts);
+  const [status, setStatus] = useState("");
 
-  async function handleMint() {
-    if (window.ethereum) {
+  useEffect(() => {
+    const fetchStatus = async () => {
       const provider = new ethers.providers.Web3Provider(window.ethereum);
       const signer = provider.getSigner();
-      const contract = new ethers.Contract(
-        roboPunksNFTAddress,
-        roboPunksNFT.abi,
-        signer
-      );
+      const contract = new ethers.Contract(contractAddress, DNFT, signer);
+      const statusContract = await contract.status();
+      setStatus(statusContract);
+    };
+
+    fetchStatus().catch(console.error);
+    // setTimeout(() => {
+    //   alert(`${status} Period is active!`);    }, 300)
+  }, []);
+
+  async function handleMint() {
+    if (window.ethereum && isConnected) {
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const signer = provider.getSigner();
+      const contract = new ethers.Contract(contractAddress, DNFT, signer);
       try {
-        const response = await contract.mint(BigNumber.from(mintAmount),{
-            value: ethers.utils.parseEther((0.02 * mintAmount).toString()),
-        });
+        let response;
+        const statusContract = await contract.status();
+        setStatus(statusContract);
+        const price = await contract.getPrice();
+        if (status === "PublicSale") {
+          response = await contract.publicMint(BigNumber.from(mintAmount), {
+            value: ethers.utils.parseEther(
+              ((parseInt(Number(price)) / 10 ** 18) * mintAmount).toString()
+            ),
+          });
+        }
+        if (status === "PreSale") {
+          const presale = await axios.get(
+            `http://localhost:3000/whitelist/${accounts}`
+          );
+          console.log(presale);
+          setTimeout(async () => {
+            response = await contract.presaleMint(
+              presale.data.proof,
+              BigNumber.from(mintAmount),
+              BigNumber.from(presale.data.allowance),
+              {
+                value: ethers.utils.parseEther(
+                  ((parseInt(Number(price)) / 10 ** 18) * mintAmount).toString()
+                ),
+              }
+            );
+          }, 500);
+        }
+        if (status === "ReservedSale") {
+          const reserved = await axios.get(
+            `http://localhost:3000/reserved/${accounts}`
+          );
+          setTimeout(async () => {
+            response = await contract.reservedMint(reserved.data.proof);
+          }, 500);
+        }
         console.log("response: ", response);
       } catch (err) {
         console.log("error: ", err);
-      }
+        alert(err.message);
+      } 
+    }else{
+      alert("Connect to your wallet first")
     }
   }
 
   const handleDecrement = () => {
-    if (mintAmount <= 1) return;
+    if (mintAmount <= 1 || status === "ReservedSale") return;
     setMintAmount(mintAmount - 1);
   };
 
   const handleIncrement = () => {
-    if (mintAmount >= 3) return;
+    if (mintAmount >= 3 || status === "ReservedSale") return;
     setMintAmount(mintAmount + 1);
   };
 
   return (
     <Flex justify="center" align="center" height="100vh" paddingBottom="150px">
       <Box width="520px">
-        <div>
-          <Text fontSize="48px" textShadow="0 5px #000000">
-            RoboPunks
-          </Text>
-          <Text
-            fontSize="30px"
-            letterSpacing="-5.5%"
-            fontFamily="VT323"
-            textShadow="0 2px 2px #000000"
-          >
-            It's 2078. Can the RoboPunks NFT save humans from destructive
-            rampant NFT speculation? Mint RoboPunks to find out.
-          </Text>
-        </div>
-
-        {isConnected ? (
-          <div>
-            <Flex align="center" justify="center">
+        <VStack width="100%" justifyContent="center" alignItems="center">
+          <Text fontSize="2xl">DNFT</Text>
+          <Text fontSize="md">{status} Period is active!</Text>
+        </VStack>
+            <Box display="flex" justifyContent="center">
+              <HStack align="center" justify="space-between" w="250px">
+                <Text
+                  fontSize="30px"
+                  color="#4c6687"
+                  border="solid 1px"
+                  borderColor="#a8a6a6"
+                  borderRadius="8px"
+                  px="16px"
+                  py="2px"
+                  textAlign="center"
+                  cursor="pointer"
+                  onClick={handleDecrement}
+                >
+                  {" "}
+                  -{" "}
+                </Text>
+                <Input
+                  readOnly
+                  fontFamily="inherit"
+                  width="100px"
+                  height="40px"
+                  textAlign="center"
+                  p="8px"
+                  marginTop="10px"
+                  type="number"
+                  value={mintAmount}
+                />
+                <Text
+                  fontSize="30px"
+                  color="#4c6687"
+                  border="solid 1px"
+                  borderColor="#a8a6a6"
+                  borderRadius="8px"
+                  px="16px"
+                  py="2px"
+                  textAlign="center"
+                  cursor="pointer"
+                  onClick={handleIncrement}
+                >
+                  {" "}
+                  +{" "}
+                </Text>
+              </HStack>
+            </Box>
+            <Box w="100%" display="flex" justifyContent="center">
               <Button
-                backgroundColor="#D6517D"
-                borderRadius="5px"
-                boxShadow="0px 2px 2px 1px #0F0F0F"
-                color="white"
+                onClick={handleMint}
+                px="16px"
+                py="8px"
+                bgColor="#4c6687"
+                color="#fff5de"
                 cursor="pointer"
-                fontFamily="inherit"
-                padding="15px"
-                marginTop="10px"
-                onClick={handleDecrement}
+                borderRadius="4px"
               >
-                {" "}
-                -{" "}
+                Mint
               </Button>
-              <Input
-                readOnly
-                fontFamily="inherit"
-                width="100px"
-                height="40px"
-                textAlign="center"
-                paddingLeft="19px"
-                marginTop="10px"
-                type="number"
-                value={mintAmount}
-              />
-              <Button
-                backgroundColor="#D6517D"
-                borderRadius="5px"
-                boxShadow="0px 2px 2px 1px #0F0F0F"
-                color="white"
-                cursor="pointer"
-                fontFamily="inherit"
-                padding="15px"
-                marginTop="10px"
-                onClick={handleIncrement}
-              >
-                {" "}
-                +{" "}
-              </Button>
-            </Flex>
-            <Button
-              backgroundColor="#D6517D"
-              borderRadius="5px"
-              boxShadow="0px 2px 2px 1px #0F0F0F"
-              color="white"
-              cursor="pointer"
-              fontFamily="inherit"
-              padding="15px"
-              marginTop="10px"
-              onClick={handleMint}
-            >
-              Mint Now
-            </Button>
-          </div>
-        ) : (
-          <Text
-          marginTop="70px"
-          fontSize="30px"
-          letterSpacing="-5.5%"
-          fontFamily="VT323"
-          textShadow="0 3px #000000"
-          color="#D6517D"
-          >You must be connected to Mint. </Text>
-        )}
+            </Box>
       </Box>
     </Flex>
   );

@@ -25,7 +25,7 @@ module.exports = {
   solidity: "0.8.4",
   networks:{
     goerli: {
-      url: process.env.REACT_APP_GOERLI_RPC_URL,
+      url: process.env.REACT_APP_RPC_URL,
       accounts: [process.env.REACT_APP_PRIVATE_KEY],
     },
   },

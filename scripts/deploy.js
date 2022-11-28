@@ -3,12 +3,12 @@ const hre = require("hardhat");
 
 async function main() {
 
-  const RoboPunksNFT = await hre.ethers.getContractFactory("RoboPunksNFT");
-  const roboPunksNFT = await RoboPunksNFT.deploy();
+  const DNFT = await hre.ethers.getContractFactory("MyToken");
+  const dNFT = await DNFT.deploy();
 
-  await roboPunksNFT.deployed();
+  await dNFT.deployed();
 
-  console.log("RoboPunksNFT deployed to:", roboPunksNFT.address);
+  console.log("Smart Contract has been deployed to:", dNFT.address);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

@@ -1,10 +1,10 @@
-@import url("https://fonts.googleapis.com/css?family=Press+Start+2P");
-@import url("https://fonts.googleapis.com/css?family=VT323");
+/* @import url("https://fonts.googleapis.com/css?family=Press+Start+2P");
+/* @import url("https://fonts.googleapis.com/css?family=VT323"); */ */
 
 .App {
   text-align: center;
   font-family: "Press Start 2P", "VT323";
-  color: white;
+  color: #4c6687;
 }
 
 * {
@@ -32,8 +32,8 @@ body{
   left: 0;
   right: 0;
   bottom: 0;
-  background-image: url("./assets/background/parallax-bg.gif");
-  background-size: cover;
+  /* background-image: url("./assets/background/parallax-bg.gif"); */
+  background-color: #fff5de;
   background-repeat: no-repeat;
   background-attachment: fixed;
   background-position: 40% 40%;
