@@ -52,7 +52,7 @@ const MainMint = ({ accounts }) => {
         }
         if (status === "PreSale") {
           const presale = await axios.get(
-            `http://localhost:3000/whitelist/${accounts}`
+            `${process.env.REACT_APP_WHITELIST_URL}${accounts}`
           );
           console.log(presale);
           setTimeout(async () => {
@@ -70,7 +70,7 @@ const MainMint = ({ accounts }) => {
         }
         if (status === "ReservedSale") {
           const reserved = await axios.get(
-            `http://localhost:3000/reserved/${accounts}`
+            `${process.env.REACT_APP_RESERVED_URL}${accounts}`
           );
           setTimeout(async () => {
             response = await contract.reservedMint(reserved.data.proof);
